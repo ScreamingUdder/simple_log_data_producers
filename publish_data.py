@@ -5,15 +5,16 @@ import json
 
 
 def create_message(log_device):
-    # create json message
-    # name and value
-
-    return 'blargh'
+    """Create json message"""
+    msg = {'name': log_device.get_name(),
+           'value': log_device.get_value()}
+    return json.dumps(msg)
 
 
 def main():
     # Create producer
-    p = Producer({'bootstrap.servers': 'sakura,hinata,tenten'})
+    conf = {'bootstrap.servers': 'sakura,hinata,tenten'}
+    p = Producer(**conf)
 
     # Create devices
     devices = [device.SampleTemperature()]
