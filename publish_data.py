@@ -17,7 +17,7 @@ def main():
     p = Producer(**conf)
 
     # Create devices
-    devices = [device.SampleTemperature()]
+    devices = [device.SampleTemperature(), device.Oscillator()]
 
     # Time step loop
     timestep = 1  # seconds
@@ -25,6 +25,7 @@ def main():
     while True:
         time.sleep(timestep)
         current_time += timestep
+        print current_time
         for dev in devices:
             p.produce('log_data_test', create_message(dev).encode('utf-8'))
         p.flush()
