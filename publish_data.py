@@ -8,14 +8,17 @@ import io
 import json
 
 
-def create_avro_message(log_device, writer):
+def create_avro_message(log_device, writer, id):
     """Create message bytes using Avro schema"""
+    # initialise with magic byte = 0 and 4 byte schema id
+    # TODO use id rather than hardcoding id of 1
+    kafka_magic = io.BytesIO(b'\x00\x00\x00\x00\x01')
     bytes_writer = io.BytesIO()
     encoder = avro.io.BinaryEncoder(bytes_writer)
 
     writer.write({"name": log_device.get_name(), "value": log_device.get_value()}, encoder)
 
-    return bytes_writer.getvalue()
+    return kafka_magic.getvalue() + bytes_writer.getvalue()
 
 
 def create_json_message(log_device):
@@ -52,9 +55,11 @@ def main():
 
     # Register schema
     schema_reg_url = 'http://localhost:8081'
-    r = requests.post(schema_reg_url + '/subjects/log_data_test2-value/versions',
-                      data={'schema': schema_string},
+    r = requests.post(schema_reg_url + '/subjects/log_data_test6-value/versions',
+                      data=json.dumps({'schema': schema_string}).encode('utf-8'),
                       headers={'Content-Type': 'application/vnd.schemaregistry.v1+json'})
+    schema_id = json.loads(r.text)["id"]
+    print 'Schema id: ' + str(json.loads(r.text)["id"])
 
     # Create devices
     devices = [device.SampleTemperature(), device.Oscillator()]
@@ -67,8 +72,9 @@ def main():
         current_time += timestep
         print current_time
         for dev in devices:
-            p.produce('log_data_test2', create_avro_message(dev, writer))
+            p.produce('log_data_test6', create_avro_message(dev, writer, schema_id), key='samplelog')
             p.produce('log_data_test3', create_json_message(dev))
+            dev.update(timestep)
         p.flush()
 
 
