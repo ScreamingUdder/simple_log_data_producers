@@ -24,6 +24,11 @@ class Device:
         """Get the current state of the device"""
         return 1
 
+    @abc.abstractmethod
+    def get_time(self):
+        """Get the current time"""
+        return 1
+
 
 class SampleTemperature(Device):
     """A thermometer device, unfortunately it looks like a pid controller has broken somewhere..."""
@@ -32,8 +37,10 @@ class SampleTemperature(Device):
         self.name = 'temp_1'
         self.temperature = 350  # kelvin
         self.ambient_temperature = 293  # kelvin
+        self.time = 0
 
     def update(self, timestep):
+        self.time += timestep
         self.temperature -= 0.1 * (self.temperature - self.ambient_temperature)
 
     def get_name(self):
@@ -41,6 +48,9 @@ class SampleTemperature(Device):
 
     def get_value(self):
         return self.temperature
+
+    def get_time(self):
+        return self.time
 
 
 class Oscillator(Device):
@@ -62,3 +72,6 @@ class Oscillator(Device):
 
     def get_value(self):
         return self.x
+
+    def get_time(self):
+        return self.time
