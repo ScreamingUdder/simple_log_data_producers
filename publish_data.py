@@ -12,7 +12,7 @@ def create_avro_message(log_device, writer, id):
     """Create message bytes using Avro schema"""
     # Initialise with magic byte = 0 and 4 byte schema id
     # TODO use id rather than hardcoding id
-    kafka_magic = io.BytesIO(b'\x00\x00\x00\x00\x02')
+    kafka_magic = io.BytesIO(b'\x00\x00\x00\x00\x15')
     bytes_writer = io.BytesIO()
     encoder = avro.io.BinaryEncoder(bytes_writer)
 
@@ -47,9 +47,12 @@ def main():
     schema_string = "".join(schema_string.split())
     print schema_string
 
+    # Topic
+    topic_name = 'demo_2'
+
     # Register schema
     schema_reg_url = 'http://localhost:8081'
-    r = requests.post(schema_reg_url + '/subjects/log_data_test-value/versions',
+    r = requests.post(schema_reg_url + '/subjects/' + topic_name + '-value/versions',
                       data=json.dumps({'schema': schema_string}).encode('utf-8'),
                       headers={'Content-Type': 'application/vnd.schemaregistry.v1+json'})
     schema_id = json.loads(r.text)["id"]
@@ -66,7 +69,7 @@ def main():
         current_time += timestep
         print current_time
         for dev in devices:
-            p.produce('log_data_test',
+            p.produce(topic_name,
                       value=create_avro_message(dev, writer, schema_id))
             dev.update(timestep)
         p.flush()
