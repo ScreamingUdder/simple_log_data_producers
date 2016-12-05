@@ -1,0 +1,18 @@
+curl -XPUT 'localhost:9200/demo_9?pretty' -d'
+{
+  "mappings": {
+    "kafka-connect": {
+      "dynamic_templates": [
+        {
+          "dates": {
+            "match": "datetime",
+            "mapping": {
+              "type": "date",
+              "format": "YYYY-MM-dd HH:mm:ss"
+            }
+          }
+        }
+      ]
+    }
+  }
+}'
