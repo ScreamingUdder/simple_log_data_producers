@@ -1,5 +1,6 @@
 from confluent_kafka import Producer
 import time
+import datetime
 import device
 import requests
 import avro.schema
@@ -12,11 +13,15 @@ def create_avro_message(log_device, writer, id):
     """Create message bytes using Avro schema"""
     # Initialise with magic byte = 0 and 4 byte schema id
     # TODO use id rather than hardcoding id
-    kafka_magic = io.BytesIO(b'\x00\x00\x00\x00\x15')
+    kafka_magic = io.BytesIO(b'\x00\x00\x00\x00\x01')
     bytes_writer = io.BytesIO()
     encoder = avro.io.BinaryEncoder(bytes_writer)
 
-    writer.write({"name": log_device.get_name(), "value": log_device.get_value(), "time": log_device.get_time()}, encoder)
+    writer.write(
+        {"name": log_device.get_name(),
+         "value": log_device.get_value(),
+         "time": log_device.get_time(),
+         "datetime": str(datetime.datetime.utcnow()).split('.')[0]}, encoder)
 
     return kafka_magic.getvalue() + bytes_writer.getvalue()
 
@@ -31,7 +36,8 @@ def main():
      "fields": [
          {"name": "name", "type": "string"},
          {"name": "value",  "type": "float"},
-         {"name": "time", "type": "float"}
+         {"name": "time", "type": "float"},
+         {"name": "datetime", "type": "string"}
      ]
     }
     '''
@@ -48,7 +54,7 @@ def main():
     print schema_string
 
     # Topic
-    topic_name = 'demo_2'
+    topic_name = 'demo_9'
 
     # Register schema
     schema_reg_url = 'http://localhost:8081'
